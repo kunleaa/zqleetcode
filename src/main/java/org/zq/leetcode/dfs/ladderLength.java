@@ -1,80 +1,57 @@
 package org.zq.leetcode.dfs;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * https://leetcode-cn.com/explore/interview/card/top-interview-questions-easy/7/trees/49/
  */
 public class ladderLength {
     public int ladderLength(String beginWord, String endWord, List<String> wordList) {
-        if (!wordList.contains(endWord)) {
-            return 0;
-        }
-        List<String> copyWordList = new ArrayList<>(wordList);
-        copyWordList.add(beginWord);
+        List<String> notvisited = new ArrayList<>(wordList);
+        Queue<String> q = new LinkedList<>();
+        q.add(beginWord);
+        int level = 1;
 
-        long[][] lin = new long[copyWordList.size()][copyWordList.size()];
-        for (int i = 0; i < copyWordList.size(); i++) {
-            for (int j = 0; j < copyWordList.size(); j++) {
-                if (canchange(copyWordList.get(i), copyWordList.get(j))) {
-                    lin[i][j] = 1;
-                } else {
-                    lin[i][j] = Integer.MAX_VALUE;
-                }
-            }
-        }
-
-        // 代表源到其他节点的最短距离 0 表示 不能到达
-        long[] c = new long[copyWordList.size()];
-        for (int i = 0; i < c.length; i++) {
-            c[i] = lin[copyWordList.indexOf(beginWord)][i];
-        }
-
-        Map<String, Integer> v2i = new HashMap<>();
-        for (int i = 0; i < copyWordList.size(); i++) {
-            v2i.put(copyWordList.get(i), i);
-        }
-
-
-        List<String> sour = new ArrayList<>(Arrays.asList(beginWord));
-        List<String> dest = new ArrayList<>(copyWordList);
-        dest.remove(beginWord);
-        while (!dest.isEmpty()) {
-            String newWord = null;
-            for (String d : dest) {
-                for (String s : sour) {
-                    long dis = lin[v2i.get(s)][v2i.get(d)];
-                    if (dis < Integer.MAX_VALUE) {
-                        long cur = c[v2i.get(d)];
-                        c[v2i.get(d)] = Math.min(c[v2i.get(s)] + dis, cur);
-                        newWord = d;
+        while (true) {
+            // 用于保存下一层所有节点
+            Queue<String> temp = new LinkedList<>();
+            // 当前层遍历结束
+            while (!q.isEmpty()) {
+                String v = q.poll();
+                List<String> rnv = new ArrayList<>();
+                for (String nv : notvisited) {
+                    if (canchange(nv, v)) {
+                        if (nv.equals(endWord)) {
+                            return level + 1;
+                        }
+                        temp.add(nv);
+                        rnv.add(nv);
                     }
                 }
-                if (newWord != null) {
-                    break;
-                }
+                notvisited.removeAll(rnv);
             }
-            if (newWord != null) {
-                dest.remove(newWord);
-                sour.add(newWord);
-            } else {
+            // 结束条件
+            if (temp.isEmpty()) {
                 break;
             }
+            q.addAll(temp);
+            level++;
         }
-        return c[v2i.get(endWord)] == Integer.MAX_VALUE ? 0 : (int) c[v2i.get(endWord)] + 1;
+        return 0;
     }
 
     boolean canchange(String from, String to) {
         int dffCnt = 0;
-        for (int j = 0; j < from.length(); j++) {
+        for (int j = 0; j < from.length() && dffCnt <= 1; j++) {
             if (from.charAt(j) != to.charAt(j)) {
                 dffCnt++;
             }
         }
-        if (dffCnt == 1) {
-            return true;
-        }
-        return false;
+        return dffCnt == 1;
     }
+
 }
